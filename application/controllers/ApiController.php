@@ -19,4 +19,14 @@ class ApiController extends Controller {
       $json = getJson();
       $result = $this->model->delProduct($json);
     }
+    public function productDetail(){
+      $urlPaths = getUrlPaths();
+      if(!isset($urlPaths[2])){
+        exit();
+      }
+      $param = [
+        'product_id' => intval($urlPaths[2])
+      ];
+      return $this->model->productDetail($param);
+    }
 }
