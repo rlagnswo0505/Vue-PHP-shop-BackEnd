@@ -38,11 +38,7 @@ class ApiController extends Controller {
       $productId = intval($urlPaths[2]);
       $type = intval($urlPaths[3]);
       $json = getJson();
-      $param = [
-        'product_id' => $productId,
-        'type' => $type,
-        'path' => '',
-      ];
+      
       foreach($json['images'] as $image){
         $image_parts = explode(";base64,", $image);
         $image_type_aux = explode("image/", $image_parts[0]);      
@@ -55,14 +51,54 @@ class ApiController extends Controller {
         if(!is_dir($dirPath)) {
             mkdir($dirPath, 0777, true);
         }
-        $param['path'] .= ($randomNm . '.' . $image_type . ', ');
+        $param = [
+          'product_id' => $productId,
+          'type' => $type,
+          'path' => $randomNm . '.' . $image_type,
+        ];
+      $this->model->productImageInsert($param);
+
+        // 해당경로에 이미지를 생성
         $result = file_put_contents($filePath, $image_base64); 
       };
       
       //$file = _IMG_PATH . "/" . $productId . "/" . $type . "/" . uniqid() . "." . $image_type;
       //$file = "static/" . uniqid() . "." . $image_type;
-      // 해당경로에 이미지를 생성
-      $this->model->productImageInsert($param);
       return [_RESULT => 1];
+  }
+  public function productImageList() {
+    $urlPaths = getUrlPaths();
+    if(!isset($urlPaths[2])) {
+        exit();
+    }
+    $productId = intval($urlPaths[2]);
+    $param = [
+        "product_id" => $productId
+    ];
+    return $this->model->productImageList($param);
+  }
+  public function productImageDelete() {
+    $urlPaths = getUrlPaths();
+    if(count($urlPaths) !== 6){
+      exit();
+    }
+    $result = 0;
+    switch(getMethod()){
+      case _DELETE:
+        //이미지 파일 삭제!
+        $product_image_id = intval($urlPaths[2]);
+        $product_id = intval($urlPaths[3]);
+        $type = intval($urlPaths[4]);
+        $path = $urlPaths[5];
+
+        $filePath = _IMG_PATH . "/" . $product_id . "/" . $type . '/' . $path;
+        if(unlink($filePath)){
+          $param = ["product_image_id" => $product_image_id];
+          $result = $this->model->productImageDelete($param);
+        };
+        break;
+    }
+    return [_RESULT => $result];
+
   }
 }

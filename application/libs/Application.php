@@ -25,7 +25,6 @@ class Application{
         $model = $this->getModel($controller);
         new $controllerName($action, $model);
     }
-
     public static function getModel($key) {
         if(!in_array($key, static::$modelList)) {
             $modelName = 'application\models\\' . $key . 'model';
