@@ -17,6 +17,8 @@
 
     define("_LOGINUSER", "loginUser");
 
+    define("_IMG_PATH", "static/img");
+
     define("_LIST", "list");
     define("_DATA", "data");
     define("_ITEM", "item");
