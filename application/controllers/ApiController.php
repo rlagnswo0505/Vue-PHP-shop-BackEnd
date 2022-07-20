@@ -31,6 +31,7 @@ class ApiController extends Controller {
     }
     public function upload() {
       $urlPaths = getUrlPaths();
+      // 2번방과 3번방에 pathvariable이 있다 2번방 id, 3번방 type
       if(!isset($urlPaths[2]) || !isset($urlPaths[3])) {
           exit();
       }
@@ -39,7 +40,8 @@ class ApiController extends Controller {
       $json = getJson();
       $image_parts = explode(";base64,", $json["image"]);
       $image_type_aux = explode("image/", $image_parts[0]);      
-      $image_type = $image_type_aux[1];      
+      $image_type = $image_type_aux[1];
+      // 문자열을 디코딩
       $image_base64 = base64_decode($image_parts[1]);
       $dirPath = _IMG_PATH . "/" . $productId . "/" . $type;
       $filePath = $dirPath . "/" . uniqid() . "." . $image_type;
@@ -48,6 +50,7 @@ class ApiController extends Controller {
       }
       //$file = _IMG_PATH . "/" . $productId . "/" . $type . "/" . uniqid() . "." . $image_type;
       //$file = "static/" . uniqid() . "." . $image_type;
+      // 해당경로에 이미지를 생성
       $result = file_put_contents($filePath, $image_base64); 
       return [_RESULT => 1];
   }
