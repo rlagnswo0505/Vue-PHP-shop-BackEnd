@@ -32,6 +32,31 @@ class ApiModel extends Model {
       $stmt->execute();
       return intval($this->pdo->lastInsertId());
   }
+  public function productList(&$param) {
+    $sql = "SELECT t1.*, t2.type, t2.path, t3.cate1, t3.cate2, t3.cate3
+              FROM t_product t1, t_product_img t2, t_category t3 
+             WHERE t1.id = t2.product_id
+               AND t2.type = 1
+               AND t1.category_id = t3.id";
+    if(isset($param["cate3"])) {
+        $cate3 = $param["cate3"];
+        $sql .= " AND t3.id = {$cate3}";
+
+    } else {
+        if(isset($param["cate1"])) {
+            $cate1 = $param["cate1"];
+            $sql .= " AND t3.cate1 = '{$cate1}'";
+        }
+        if(isset($param["cate2"])) {
+            $cate2 = $param["cate2"];
+            $sql .= " AND t3.cate2 = '{$cate2}'";
+        }
+    }
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
+
   public function productList2() {
     $sql = "SELECT t3.*, t4.path FROM (
               SELECT t1.*, t2.cate1, t2.cate2, t2.cate3
@@ -104,19 +129,37 @@ class ApiModel extends Model {
     $stmt->execute();
     return $stmt->rowCount();
   }
-  // public function productTypeImageDelete(&$param) {
-  //   $sql = 'DELETE FROM t_product_img WHERE product_id = :product_id AND type = :type';
-  //   $stmt = $this->pdo->prepare($sql);
-  //   $stmt->bindValue(":product_id", $param["product_id"]);
-  //   $stmt->bindValue(":type", $param["type"]);
-  //   $stmt->execute();
-  //   return $stmt->rowCount();
-  // }
-  // public function productIdImageDelete(&$param) {
-  //   $sql = 'DELETE FROM t_product_img WHERE product_id = :id';
-  //   $stmt = $this->pdo->prepare($sql);
-  //   $stmt->bindValue(":id", $param["id"]);
-  //   $stmt->execute();
-  //   return $stmt->rowCount();
-  // }
+  public function cate1List() {
+    $sql = "SELECT cate1 AS cate_nm FROM t_category
+            GROUP BY cate1 ORDER BY cate_nm";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
+
+public function cate2List(&$param) {
+    $sql = "SELECT cate2 AS cate_nm
+            FROM t_category
+            WHERE cate1 = :cate1
+            GROUP BY cate2
+            ORDER BY cate_nm";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(":cate1", $param["cate1"]);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
+
+public function cate3List(&$param) {
+    $sql = "SELECT id, cate3 AS cate_nm
+            FROM t_category
+            WHERE cate1 = :cate1
+            AND cate2 = :cate2
+            GROUP BY id, cate3
+            ORDER BY cate_nm";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(":cate1", $param["cate1"]);
+    $stmt->bindValue(":cate2", $param["cate2"]);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
 }
