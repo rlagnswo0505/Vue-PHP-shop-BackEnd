@@ -1,5 +1,6 @@
 <?php
 namespace application\controllers;
+use Exception;
 
 class ApiController extends Controller {
     public function categoryList() {
@@ -15,10 +16,35 @@ class ApiController extends Controller {
       $result = $this->model->productList2();
       return $result === false ? [] : $result;
     }
-    public function delProduct(){
-      $json = getJson();
-      $result = $this->model->delProduct($json);
-    }
+    public function deleteProduct() {
+      $urlPaths = getUrlPaths();
+      if(count($urlPaths) !== 3) {
+          exit();
+      }
+      $productId = intval($urlPaths[2]);
+      
+      try {
+          $param = [
+              "product_id" => $productId
+          ];
+          $this->model->beginTransaction();
+          $this->model->productImageDelete($param);
+          $result = $this->model->productDelete($param);
+          if($result === 1) {
+              //이미지 삭제
+              rmdirAll(_IMG_PATH . "/" . $productId);
+              $this->model->commit();
+          } else {
+              $this->model->rollback();    
+          }
+      } catch(Exception $e) {
+          print "에러발생<br>";
+          print $e . "<br>";
+          $this->model->rollback();
+      }    
+      
+      return [_RESULT => 1];
+  }
     public function productDetail(){
       $urlPaths = getUrlPaths();
       if(!isset($urlPaths[2])){
@@ -38,6 +64,15 @@ class ApiController extends Controller {
       $productId = intval($urlPaths[2]);
       $type = intval($urlPaths[3]);
       $json = getJson();
+      $dirPath = _IMG_PATH . "/" . $productId . "/" . $type;
+      
+      // 해당제품에 타입이 같은 테이블 삭제
+      $param = [
+        'product_id' => $productId,
+        'type' => $type,
+      ];
+        rmdirAll($dirPath);
+        $this->model->productImageDelete($param);
       
       foreach($json['images'] as $image){
         $image_parts = explode(";base64,", $image);
@@ -45,18 +80,15 @@ class ApiController extends Controller {
         $image_type = $image_type_aux[1];
         // 문자열을 디코딩
         $image_base64 = base64_decode($image_parts[1]);
-        $dirPath = _IMG_PATH . "/" . $productId . "/" . $type;
         $randomNm = uniqid();
         $filePath = $dirPath . "/" . $randomNm . "." . $image_type;
+        // 파일있으면 폴더 삭제하기
+        $param['path'] = $randomNm . '.' . $image_type;
         if(!is_dir($dirPath)) {
             mkdir($dirPath, 0777, true);
         }
-        $param = [
-          'product_id' => $productId,
-          'type' => $type,
-          'path' => $randomNm . '.' . $image_type,
-        ];
-      $this->model->productImageInsert($param);
+        
+        $this->model->productImageInsert($param);
 
         // 해당경로에 이미지를 생성
         $result = file_put_contents($filePath, $image_base64); 

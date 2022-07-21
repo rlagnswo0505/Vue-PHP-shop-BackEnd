@@ -47,11 +47,12 @@ class ApiModel extends Model {
       $stmt->execute();
       return $stmt->fetchAll(PDO::FETCH_OBJ);
   }
-  public function delProduct(&$param) {
-    $sql = "DELETE FROM t_product WHERE id=:id";
+  public function productDelete(&$param) {
+    $sql = "DELETE FROM t_product WHERE id=:product_id";
       $stmt = $this->pdo->prepare($sql);
-      $stmt->bindValue(":id", $param["id"]);
+      $stmt->bindValue(":product_id", $param["product_id"]);
       $stmt->execute();
+      return $stmt->rowCount();
   }
   public function productDetail(&$param){
     $sql = "SELECT t3.*, t4.path FROM (
@@ -91,10 +92,31 @@ class ApiModel extends Model {
     return $stmt->fetchAll(PDO::FETCH_OBJ);
   }
   public function productImageDelete(&$param) {
-    $sql = 'DELETE FROM t_product_img WHERE id= :product_image_id';
+    $sql = 'DELETE FROM t_product_img WHERE ';
+    if(array_key_exists("product_image_id", $param)){
+      $sql .= "id = " . $param["product_image_id"];
+    } else if(array_key_exists("product_id", $param)){
+      $sql .= "product_id = " . $param["product_id"];
+      if(array_key_exists("type", $param))
+      $sql .= " AND type = " . $param["type"];
+    }
     $stmt = $this->pdo->prepare($sql);
-    $stmt->bindValue(":product_image_id", $param["product_image_id"]);
     $stmt->execute();
     return $stmt->rowCount();
   }
+  // public function productTypeImageDelete(&$param) {
+  //   $sql = 'DELETE FROM t_product_img WHERE product_id = :product_id AND type = :type';
+  //   $stmt = $this->pdo->prepare($sql);
+  //   $stmt->bindValue(":product_id", $param["product_id"]);
+  //   $stmt->bindValue(":type", $param["type"]);
+  //   $stmt->execute();
+  //   return $stmt->rowCount();
+  // }
+  // public function productIdImageDelete(&$param) {
+  //   $sql = 'DELETE FROM t_product_img WHERE product_id = :id';
+  //   $stmt = $this->pdo->prepare($sql);
+  //   $stmt->bindValue(":id", $param["id"]);
+  //   $stmt->execute();
+  //   return $stmt->rowCount();
+  // }
 }

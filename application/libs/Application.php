@@ -11,7 +11,7 @@ class Application{
     public $action;
     private static $modelList = [];
 
-    public function __construct() {        
+    public function __construct() {
         $urlPaths = getUrlPaths();
         $controller = isset($urlPaths[0]) && $urlPaths[0] != '' ? $urlPaths[0] : 'board';
         $action = isset($urlPaths[1]) && $urlPaths[1] != '' ? $urlPaths[1] : 'index';
